@@ -17,11 +17,21 @@ public class PhysicsObject {
     }
 
     public void applyForce(double fx, double fy) {
-        this.ax += fx / mass;
+        this.ax += fx / mass; // F = ma -> a = F / m
         this.ay += fy / mass;
     }
 
     public void update(double dt) {
-        vx += ax * dt; // Up
+        // Update velocity using acceleration
+        vx += ax * dt; 
+        vy += ay * dt;
+
+        // Update position using velocity
+        x += vx * dt; 
+        y += vy * dt;
+
+        // Reset acceleration for the next frame (forces will reapply in the next loop)
+        ax = 0;
+        ay = 0;
     }
 }

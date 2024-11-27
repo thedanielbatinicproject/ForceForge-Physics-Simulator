@@ -27,7 +27,7 @@ public class ForceForgeAppMain {
         Timer timer = new Timer(16, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                engine.applyGlobalForce(0, 100); // Apply constant downward gravity
+                engine.applyGlobalForce(120, 1000); // Apply constant downward gravity
                 engine.update(0.016);          // Update physics (dt = 16 ms)
                 renderer.repaint();            // Redraw the frame
             }
