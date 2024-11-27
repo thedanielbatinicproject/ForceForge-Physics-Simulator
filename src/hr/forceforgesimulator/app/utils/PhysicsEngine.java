@@ -13,9 +13,9 @@ public class PhysicsEngine {
         objects.add(obj);
     }
 
-    public void applyGlobalForce(double fx, double fy) {
+    public void applyGlobalForce(double fx, double fy, double fz) {
         for (PhysicsObject obj : objects) {
-            obj.applyForce(fx, fy);
+            obj.applyForce(fx, fy, fz);
         }
     }
 
