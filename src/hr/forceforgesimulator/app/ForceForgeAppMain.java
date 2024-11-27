@@ -1,43 +1,125 @@
 package hr.forceforgesimulator.app;
 
 
-import javax.swing.Timer;
 
-import java.awt.event.ActionEvent;
 
-import javax.swing.JFrame;
+import java.util.ArrayList;
 
 import hr.forceforgesimulator.app.utils.PhysicsEngine;
 import hr.forceforgesimulator.app.utils.PhysicsObject;
-
+import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryUtil.*;
 
 public class ForceForgeAppMain {
+	
+	private long window;
+    private final int WIDTH = 800;
+    private final int HEIGHT = 600;
+
+    private ArrayList<PhysicsObject> objects = new ArrayList<>();
+	
 	public static void main(String[] args) {
-        JFrame frame = new JFrame("3D Physics Simulator");
-        frame.setSize(800, 600);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // Create the PhysicsEngine
-        PhysicsEngine engine = new PhysicsEngine();
-
-        // Add objects in 3D space
-        engine.addObject(new PhysicsObject(100, 100, 200, 1));
-        engine.addObject(new PhysicsObject(-100, -100, 300, 2));
-
-        // Create the Renderer3D
-        Renderer3D renderer = new Renderer3D(engine);
-        frame.add(renderer);
-
-        frame.setVisible(true);
-
-        // Timer for simulation loop (60 FPS, 16ms per frame)
-        Timer timer = new Timer(16, (ActionEvent e)  -> {
-            engine.applyGlobalForce(0, 122, 1330); // Apply force in the -Z direction
-            engine.update(0.016);              // Update physics (dt = 16 ms)
-            renderer.repaint();                // Redraw the frame
-        });
-
-        // Start the timer
-        timer.start();
+		new ForceForgeAppMain().run();
+	}
+	
+	
+	public void run() {
+        init();
+        loop();
+        glfwTerminate();
     }
+
+    private void init() {
+        // Initialize GLFW
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+
+        // Configure GLFW
+        glfwDefaultWindowHints();
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+        // Create the window
+        window = glfwCreateWindow(WIDTH, HEIGHT, "3D Physics Simulator", NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create the GLFW window");
+        }
+
+        // Center the window
+        GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        glfwSetWindowPos(window, (vidmode.width() - WIDTH) / 2, (vidmode.height() - HEIGHT) / 2);
+
+        // Make OpenGL context current
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1); // Enable v-sync
+
+        // Show the window
+        glfwShowWindow(window);
+
+        // Initialize OpenGL
+        GL.createCapabilities();
+
+        // Set up OpenGL settings
+        glEnable(GL_DEPTH_TEST);
+
+        // Add physics objects
+        objects.add(new PhysicsObject(0, 0, -5, 1));
+        objects.add(new PhysicsObject(1, 1, -10, 0.5f));
+    }
+    
+    private void loop() {
+        setupProjection(); // Set up the perspective projection
+        double lastTime = glfwGetTime();
+
+        while (!glfwWindowShouldClose(window)) {
+            double currentTime = glfwGetTime();
+            double dt = currentTime - lastTime;
+            lastTime = currentTime;
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            setupCamera(); // Position the camera
+
+            // Apply forces and update physics
+            for (PhysicsObject obj : objects) {
+                obj.applyForce(124, -9.8 * obj.getMass(), 0); // Apply gravity
+                obj.update(dt); // Update physics with delta time
+                obj.render(); // Render the object
+            }
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+    }
+
+    
+    
+    
+    
+    //Aditional methods
+    private void setupProjection() {
+        double fov = 70.0; // Field of View in degrees
+        double aspectRatio = (double) WIDTH / HEIGHT;
+        double near = 0.1; // Near clipping plane
+        double far = 100.0; // Far clipping plane
+
+        double top = Math.tan(Math.toRadians(fov / 2)) * near;
+        double bottom = -top;
+        double right = top * aspectRatio;
+        double left = -right;
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glFrustum(left, right, bottom, top, near, far);
+        glMatrixMode(GL_MODELVIEW);
+    }
+    private void setupCamera() {
+        glLoadIdentity();
+        glTranslated(0.0, 0.0, -10.0); // Move the camera back along the Z-axis
+    }
+
+
 }
